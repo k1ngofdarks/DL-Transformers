@@ -106,9 +106,10 @@ def create_dataloaders(
     val_en: list[str],
     batch_size: int = 128,
     max_len: int = 80,
+    size_vocab: int = 25000,
 ):
-    de_tokenizer = Tokenizer(max_size=20000)
-    en_tokenizer = Tokenizer(max_size=20000)
+    de_tokenizer = Tokenizer(max_size=size_vocab)
+    en_tokenizer = Tokenizer(max_size=size_vocab)
 
     de_tokenizer.build_vocab(train_de)
     en_tokenizer.build_vocab(train_en)
