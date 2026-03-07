@@ -12,9 +12,6 @@ from IPython.display import clear_output
 from tqdm.auto import tqdm
 
 
-AMP_DTYPE = torch.float16
-
-
 def greedy_decode(model, src, src_key_padding_mask, max_len, bos_id, eos_id):
     model_for_decode = model
     device = src.device
@@ -185,7 +182,6 @@ def train_model(
     val_tgt_texts,
     epochs=10,
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-    amp_dtype=AMP_DTYPE,
     comet_experiment=None,
 ):
     pad_id_src = src_tokenizer.word2id["<pad>"]
@@ -217,7 +213,6 @@ def train_model(
                 "weight_decay": 1e-4,
                 "label_smoothing": 0.1,
                 "batch_size": getattr(train_loader, "batch_size", None),
-                "amp_dtype": str(amp_dtype),
             }
         )
 
@@ -242,9 +237,9 @@ def train_model(
 
             optimizer.zero_grad(set_to_none=True)
 
-            with torch.amp.autocast(device_type=device.type, dtype=amp_dtype, enabled=device.type == "cuda"):
-                logits = model(src, tgt_input, pad_id_src=pad_id_src, pad_id_tgt=pad_id_tgt)
-                loss = criterion(logits.reshape(-1, logits.shape[-1]), tgt_expected.reshape(-1))
+            #with torch.amp.autocast(device_type=device.type, enabled=device.type == "cuda"):
+            logits = model(src, tgt_input, pad_id_src=pad_id_src, pad_id_tgt=pad_id_tgt)
+            loss = criterion(logits.reshape(-1, logits.shape[-1]), tgt_expected.reshape(-1))
 
             if not torch.isfinite(loss):
                 print(f"[WARN] Non-finite loss at step {global_step}: {loss.item()}. Skipping batch.")
@@ -285,9 +280,9 @@ def train_model(
                 tgt_input = tgt[:, :-1]
                 tgt_expected = tgt[:, 1:]
 
-                with torch.amp.autocast(device_type=device.type, dtype=amp_dtype, enabled=device.type == "cuda"):
-                    logits = model(src, tgt_input, pad_id_src=pad_id_src, pad_id_tgt=pad_id_tgt)
-                    loss = criterion(logits.reshape(-1, logits.shape[-1]), tgt_expected.reshape(-1))
+                #with torch.amp.autocast(device_type=device.type, enabled=device.type == "cuda"):
+                logits = model(src, tgt_input, pad_id_src=pad_id_src, pad_id_tgt=pad_id_tgt)
+                loss = criterion(logits.reshape(-1, logits.shape[-1]), tgt_expected.reshape(-1))
 
                 val_loss += loss.item()
 
