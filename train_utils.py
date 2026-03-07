@@ -128,7 +128,7 @@ def batch_translate(
     device,
     batch_size=32,
     max_len=80,
-    decode_strategy="beam",
+    decode_strategy="gready",
     beam_size=4,
     length_penalty=0.7,
 ):
@@ -222,6 +222,7 @@ def train_model(
         )
 
     history_train_loss, history_val_loss, history_bleu = [], [], []
+
     global_step = 0
     best_bleu = -1.0
     best_state = None
@@ -272,6 +273,8 @@ def train_model(
         train_loss = epoch_loss / max(1, valid_updates)
         history_train_loss.append(train_loss)
 
+        print("DO eval")
+
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
@@ -287,6 +290,8 @@ def train_model(
                     loss = criterion(logits.reshape(-1, logits.shape[-1]), tgt_expected.reshape(-1))
 
                 val_loss += loss.item()
+
+        print("END eval")
 
         val_loss = val_loss / len(val_loader)
         history_val_loss.append(val_loss)

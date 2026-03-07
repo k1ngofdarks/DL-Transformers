@@ -9,9 +9,8 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class Tokenizer:
-    def __init__(self, max_size: int = 20000, min_freq: int = 1):
+    def __init__(self, max_size: int = 20000):
         self.max_size = max_size
-        self.min_freq = min_freq
         self.special_tokens = ["<pad>", "<unk>", "<bos>", "<eos>"]
         self.word2id: dict[str, int] = {}
         self.id2word: dict[int, str] = {}
@@ -21,11 +20,11 @@ class Tokenizer:
         for sentence in sentences:
             counter.update(sentence.split())
 
-        words = [word for word, count in counter.items() if count >= self.min_freq]
+        words = [word for word, count in counter.items()]
         words = sorted(words, key=lambda word: counter[word], reverse=True)[: self.max_size]
 
-        vocab_words = self.special_tokens + words
-        self.word2id = {word: idx for idx, word in enumerate(vocab_words)}
+        vocab = self.special_tokens + words
+        self.word2id = {word: idx for idx, word in enumerate(vocab)}
         self.id2word = {idx: word for word, idx in self.word2id.items()}
 
     def encode(self, sentence: str) -> list[int]:
@@ -86,7 +85,7 @@ def load_file(path: str) -> list[str]:
 
 
 def load_data_splits() -> tuple[list[str], list[str], list[str], list[str], list[str], str]:
-    candidate_folders = [Path("DL-Transformers/bhw2-data/data"), Path("bhw2-data/data")]
+    candidate_folders = [Path("DL_Transformers/bhw2-data/data"), Path("bhw2-data/data")]
     data_folder = next((folder for folder in candidate_folders if folder.exists()), None)
     if data_folder is None:
         raise FileNotFoundError("Could not find bhw2-data/data folder")
@@ -108,8 +107,8 @@ def create_dataloaders(
     batch_size: int = 128,
     max_len: int = 80,
 ):
-    de_tokenizer = Tokenizer(max_size=20000, min_freq=1)
-    en_tokenizer = Tokenizer(max_size=20000, min_freq=1)
+    de_tokenizer = Tokenizer(max_size=20000)
+    en_tokenizer = Tokenizer(max_size=20000)
 
     de_tokenizer.build_vocab(train_de)
     en_tokenizer.build_vocab(train_en)
